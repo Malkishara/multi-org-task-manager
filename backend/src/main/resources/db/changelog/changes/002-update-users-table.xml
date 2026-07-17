@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Remove old name column -->
+    <changeSet id="V2-drop-name-column" author="isuruhansamali">
+        <dropColumn tableName="users" columnName="name"/>
+    </changeSet>
+
+    <!-- Add new user fields -->
+    <changeSet id="V3-update-users-table" author="isuruhansamali">
+
+        <addColumn tableName="users">
+            <column name="first_name" type="VARCHAR(100)"/>
+        </addColumn>
+
+        <addColumn tableName="users">
+            <column name="last_name" type="VARCHAR(100)"/>
+        </addColumn>
+
+        <addColumn tableName="users">
+            <column name="activation_key" type="VARCHAR(255)"/>
+        </addColumn>
+
+        <addColumn tableName="users">
+            <column name="activation_time" type="TIMESTAMP"/>
+        </addColumn>
+
+        <addColumn tableName="users">
+            <column name="last_activation_email_sent_time" type="TIMESTAMP"/>
+        </addColumn>
+
+        <addColumn tableName="users">
+            <column name="activation_key_expiry" type="TIMESTAMP"/>
+        </addColumn>
+
+    </changeSet>
+
+</databaseChangeLog>
