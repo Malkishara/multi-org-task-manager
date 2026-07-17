@@ -1,0 +1,90 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: stretch;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+}
+
+.leftSide,
+.rightSide {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.formContainer {
+  width: 100%;
+  max-width: 400px;
+}
+
+.title {
+  color: var(--white);
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: var(--white);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.error {
+  color: var(--danger);
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.switchText {
+  margin: 0;
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.switchButton {
+  color: var(--blue);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0;
+}
+
+.imageCard {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+@media (max-width: 900px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .rightSide {
+    display: none;
+  }
+
+  .leftSide {
+    padding: 1.5rem;
+  }
+}
