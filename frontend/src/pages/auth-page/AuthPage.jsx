@@ -8,7 +8,11 @@ import Button from '../../components/button/Button';
 import TextField from '../../components/text-field/TextField';
 
 import { authApi } from '../../apis/auth_api';
-import { loginSuccess } from '../../redux/slices/authSlice';
+import { userApi} from '../../apis/user_api';
+import { 
+    loginSuccess,
+    setUser
+} from '../../redux/slices/authSlice';
 import routes from '../../config/routes';
 import authImage from '../../assests/images/auth_ui_image.jpg';
 
@@ -35,6 +39,7 @@ export default function AuthPage({ mode }) {
     password:'',
 
   });
+
 
 useEffect(() => {
 
@@ -89,38 +94,22 @@ useEffect(() => {
         await authApi.signup(payload)
         :
         await authApi.login(payload);
+dispatch(
+    loginSuccess({
+        user:null,
+        token:response.token,
+    })
+);
 
 
+// Get logged user profile
 
-      const user = {
-
-        name:
-          response.name ||
-          `${form.firstName} ${form.lastName}`,
-
-        email:
-          response.email ||
-          form.email,
-
-        role:
-          response.role ||
-          'MEMBER',
-
-      };
+const profile = await userApi.getCurrentUser();
 
 
-
-      dispatch(
-
-        loginSuccess({
-
-          user,
-
-          token:response.token,
-
-        })
-
-      );
+dispatch(
+    setUser(profile)
+);
 
 
 
@@ -136,7 +125,7 @@ useEffect(() => {
 
 
 
-      navigate(routes.dashboard.path);
+      navigate(routes.organization.path);
 
 
 

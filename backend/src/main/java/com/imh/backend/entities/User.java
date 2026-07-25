@@ -79,6 +79,6 @@ public class User {
     }
 
     public enum Role {
-        ADMIN, MEMBER, VIEWER
+        SUPER_ADMIN, MEMBER
     }
 }

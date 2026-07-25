@@ -42,6 +42,6 @@ public class OrganizationMember {
     }
 
     public enum OrgRole {
-        OWNER, ADMIN, MEMBER, VIEWER
+        OWNER, ADMIN, MEMBER
     }
 }
