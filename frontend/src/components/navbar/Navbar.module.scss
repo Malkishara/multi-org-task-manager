@@ -1,0 +1,214 @@
+.navbar {
+  height: 70px;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.brand {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-right: 40px;
+}
+
+.menuButton {
+  display: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--navy);
+  font-size: 1.5rem;
+}
+
+.menu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.link {
+  text-decoration: none;
+  color: var(--muted);
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+.link:hover {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.active {
+  text-decoration: none;
+  background: var(--blue);
+  color: var(--white);
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.iconButton {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--white);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  color: var(--navy);
+  transition: .2s;
+}
+
+.iconButton:hover {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.profileWrapper {
+  position: relative;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 10px;
+  transition: .2s;
+}
+
+.profile:hover {
+  background: #f8fafc;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: var(--white);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.userInfo span {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.userInfo small {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.dropdown {
+  position: absolute;
+  top: 58px;
+  right: 0;
+  width: 240px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, .1);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dropdown strong {
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.dropdown span {
+  font-size: 0.8rem;
+  color: var(--muted);
+  word-break: break-word;
+}
+
+.logout {
+  margin-top: 12px;
+  border: none;
+  background: var(--danger);
+  color: var(--white);
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: .2s;
+}
+
+.logout:hover {
+  opacity: .9;
+}
+
+@media (max-width: 992px) {
+  .menu {
+    display: none;
+  }
+
+  .menuButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .userInfo {
+    display: none;
+  }
+
+  .brand {
+    flex: 1;
+    text-align: center;
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 576px) {
+  .navbar {
+    padding: 0 16px;
+  }
+
+  .dropdown {
+    width: 210px;
+  }
+
+  .brand {
+    font-size: 1.2rem;
+  }
+}

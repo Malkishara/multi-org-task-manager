@@ -8,7 +8,7 @@ import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import LandingPage from './pages/landing-page/LandingPage';
 import AuthPage from './pages/auth-page/AuthPage';
-import Dashboard from './pages/dashboard/Dashboard';
+import Organization from './pages/organization/Organization';
 import ProtectedRoute from './components/ProtectedRoute';
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -26,12 +26,12 @@ const AppRoutes = () => {
 
       {/* ===== PROTECTED ROUTES ===== */}
 
-      {/* Dashboard - Main protected area */}
+      {/* Organization - Main protected area */}
       <Route
-        path="/dashboard"
+        path="/organization"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <Organization />
           </ProtectedRoute>
         }
       />

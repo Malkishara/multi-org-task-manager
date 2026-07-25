@@ -17,23 +17,23 @@ const routes = {
     name: 'Sign Up',
     protected: false,
   },
-  dashboard: {
-    path: '/dashboard',
-    name: 'Dashboard',
+  organization: {
+    path: '/organization',
+    name: 'organization',
     protected: true,
   },
   organizations: {
-    path: '/dashboard/organizations',
+    path: '/organization/organizations',
     name: 'Organizations',
     protected: true,
   },
   tasks: {
-    path: '/dashboard/tasks',
+    path: '/organization/tasks',
     name: 'Tasks',
     protected: true,
   },
   settings: {
-    path: '/dashboard/settings',
+    path: '/organization/settings',
     name: 'Settings',
     protected: true,
   },
