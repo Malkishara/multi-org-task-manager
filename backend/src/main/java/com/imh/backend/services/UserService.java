@@ -1,5 +1,6 @@
 package com.imh.backend.services;
 
+import com.imh.backend.dtos.UpdateUserProfileRequest;
 import com.imh.backend.dtos.UserProfileResponse;
 
 public interface UserService {
@@ -10,4 +11,6 @@ public interface UserService {
      * @return user profile information
      */
     UserProfileResponse getCurrentUserProfile(String email);
+
+    UserProfileResponse updateCurrentUserProfile(String email, UpdateUserProfileRequest request);
 }

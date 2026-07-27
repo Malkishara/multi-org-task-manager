@@ -106,42 +106,6 @@ public class OrganizationController {
         );
     }
 
-    /**
-     * POST /api/organizations/{id}/members
-     * Owner-only. Adds an existing user as ADMIN or MEMBER.
-     */
-    @PostMapping("/{id}/members")
-    public ResponseEntity<OrganizationMemberResponse> addMember(
-            @PathVariable Long id,
-            @Valid @RequestBody AddMemberRequest request,
-            Authentication authentication
-    ) {
-        OrganizationMemberResponse response = organizationService.addMember(id, request, getCurrentUserId(authentication));
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    /**
-     * DELETE /api/organizations/{id}/members/{userId}
-     * Owner-only. Removes a member (cannot remove the owner).
-     */
-    @DeleteMapping("/{id}/members/{userId}")
-    public ResponseEntity<Void> removeMember(
-            @PathVariable Long id,
-            @PathVariable Long userId,
-            Authentication authentication
-    ) {
-        organizationService.removeMember(id, userId, getCurrentUserId(authentication));
-        return ResponseEntity.noContent().build();
-    }
-
-    /**
-     * GET /api/organizations/{id}/members
-     * Lists every member of the organization, including the owner.
-     */
-    @GetMapping("/{id}/members")
-    public ResponseEntity<List<OrganizationMemberResponse>> getMembers(@PathVariable Long id) {
-        return ResponseEntity.ok(organizationService.getMembers(id));
-    }
 
     /**
      * Extracts the authenticated user's id.

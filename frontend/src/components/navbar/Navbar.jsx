@@ -30,8 +30,11 @@ const [open,setOpen]=useState(false);
 
 
 
+// No default here - a logged-out visitor has no role, so menus below
+// resolves to [] instead of showing protected links they'd just get
+// bounced from.
 const role =
-user?.role || "MEMBER";
+user?.role;
 
 
 const menus =
@@ -109,6 +112,9 @@ styles.link
 
 
 
+{
+user
+?
 
 <div className={styles.profileWrapper}>
 
@@ -126,6 +132,7 @@ onClick={()=>setOpen(!open)}
 
 {
 fullName
+.trim()
 .charAt(0)
 .toUpperCase()
 }
@@ -191,6 +198,22 @@ Logout
 
 
 </div>
+
+:
+
+<div className={styles.authLinks}>
+
+<NavLink to="/auth/login" className={styles.link}>
+Login
+</NavLink>
+
+<NavLink to="/auth/signup" className={styles.link}>
+Sign up
+</NavLink>
+
+</div>
+
+}
 
 
 </div>

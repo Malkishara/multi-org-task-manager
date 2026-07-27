@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!--
+        Adjust the changeSet id/author, and the numeric prefix on this
+        file's name, to fit wherever this slots into your existing
+        changelog sequence. Also confirm the "organizations" and "users"
+        table names below match your other changesets exactly.
+    -->
+    <changeSet id="004-create-projects-table" author="claude">
+
+        <createTable tableName="projects">
+
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="description" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="status" type="VARCHAR(30)" defaultValue="NOT_STARTED">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="progress" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="organization_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_by" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="start_date" type="DATE">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="end_date" type="DATE">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="projects"
+                baseColumnNames="organization_id"
+                constraintName="fk_projects_organization"
+                referencedTableName="organizations"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint
+                baseTableName="projects"
+                baseColumnNames="created_by"
+                constraintName="fk_projects_created_by"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="RESTRICT"/>
+
+        <createIndex indexName="idx_projects_organization_id" tableName="projects">
+            <column name="organization_id"/>
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>

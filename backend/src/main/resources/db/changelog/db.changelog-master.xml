@@ -10,6 +10,8 @@
 
     <include file="db/changelog/changes/001-create-auth-schema.xml"/>
     <include file="db/changelog/changes/002-update-users-table.xml"/>
+    <include file="db/changelog/changes/003-create-projects-table.xml"/>
+
 
 
 </databaseChangeLog>

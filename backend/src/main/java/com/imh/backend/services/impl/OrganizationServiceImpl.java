@@ -142,61 +142,6 @@ public class OrganizationServiceImpl implements OrganizationService {
     }
 
     /**
-     * API: POST /api/organizations/{id}/members
-     * Only the owner can add other members, and only as ADMIN or MEMBER.
-     */
-    @Override
-    public OrganizationMemberResponse addMember(Long organizationId, AddMemberRequest request, Long currentUserId) {
-        Organization organization = getOrganizationOrThrow(organizationId);
-        User targetUser = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new ResourceNotFoundException("No user found with email " + request.email()));
-
-        validator.validateCanAddMember(organization, currentUserId, targetUser, request);
-
-        OrganizationMember member = OrganizationMember.builder()
-                .organization(organization)
-                .user(targetUser)
-                .role(request.role())
-                .build();
-
-        return mapper.toMemberResponse(organizationMemberRepository.save(member));
-    }
-
-    /**
-     * API: DELETE /api/organizations/{id}/members/{userId}
-     * Only the owner can remove a member; the owner cannot remove themself.
-     */
-    @Override
-    public void removeMember(Long organizationId, Long targetUserId, Long currentUserId) {
-        Organization organization = getOrganizationOrThrow(organizationId);
-
-        validator.validateCanRemoveMember(organization, currentUserId, targetUserId);
-
-        OrganizationMember member = organizationMemberRepository
-                .findByOrganizationIdAndUserId(organizationId, targetUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("This user is not a member of the organization"));
-
-        organizationMemberRepository.delete(member);
-    }
-
-    /**
-     * API: GET /api/organizations/{id}/members
-     * Lists every member (including the owner) of an organization.
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public List<OrganizationMemberResponse> getMembers(Long organizationId) {
-        // Ensures a 404 is raised for a non-existent organization instead of
-        // silently returning an empty list.
-        getOrganizationOrThrow(organizationId);
-
-        return organizationMemberRepository.findByOrganizationId(organizationId)
-                .stream()
-                .map(mapper::toMemberResponse)
-                .collect(Collectors.toList());
-    }
-
-    /**
      * API: PATCH /api/organizations/{id}/status
      * Only the owner can toggle active/inactive. Raises the standard
      * "organization not found" error for a bad id, and reuses the same
