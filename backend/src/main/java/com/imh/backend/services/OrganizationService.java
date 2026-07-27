@@ -27,11 +27,5 @@ public interface OrganizationService {
 
     void deleteOrganization(Long organizationId, Long currentUserId);
 
-    OrganizationMemberResponse addMember(Long organizationId, AddMemberRequest request, Long currentUserId);
-
-    void removeMember(Long organizationId, Long targetUserId, Long currentUserId);
-
-    List<OrganizationMemberResponse> getMembers(Long organizationId);
-
     OrganizationResponse updateOrganizationStatus(Long id, @NotNull(message = "active is required") Boolean active, Long currentUserId);
 }

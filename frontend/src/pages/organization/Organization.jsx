@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import Navbar from "../../components/navbar/Navbar";
 import Card from "../../components/card/Card";
 import Button from "../../components/button/Button";
 import Table from "../../components/table/Table";
@@ -149,10 +148,7 @@ export default function Organization() {
 
     return (
         <>
-            <Navbar
-                user={user}
-                onLogout={handleLogout}
-            />
+          
 
             <div style={{ padding: "2rem", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                 <Card

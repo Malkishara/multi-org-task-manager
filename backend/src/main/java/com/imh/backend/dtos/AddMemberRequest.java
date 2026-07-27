@@ -13,6 +13,9 @@ import jakarta.validation.constraints.NotNull;
  */
 public record AddMemberRequest(
 
+        @NotNull(message = "Organization id is required")
+        Long organizationId,
+
         @NotBlank(message = "Email is required")
         @Email(message = "Email must be valid")
         String email,

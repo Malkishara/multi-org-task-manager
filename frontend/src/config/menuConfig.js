@@ -11,8 +11,8 @@ export const menuConfig = {
             path:"/users"
         },
         {
-            name:"Teams",
-            path:"/teams"
+            name:"Projects",
+            path:"/projects"
         },
         {
             name:"Profile",
