@@ -19,6 +19,20 @@
   max-width: 400px;
 }
 
+.brand {
+  width: 100%;
+  text-align: center;
+  color: var(--white);
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  margin-bottom: 1rem;
+
+  text-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.35),
+    0 2px 4px rgba(0, 0, 0, 0.75);
+}
+
 .title {
   color: var(--white);
   font-size: 2rem;
@@ -30,6 +44,35 @@
   color: var(--white);
   margin-bottom: 2rem;
   line-height: 1.6;
+}
+
+.fieldError {
+    color: var(--danger);
+    font-size: 0.85rem;
+    margin: -0.25rem 0 0;
+}
+
+.passwordField {
+    position: relative;
+}
+
+.eyeToggle {
+    position: absolute;
+    right: 0.9rem;
+    top: 50%;
+    transform: translateY(calc(-50% + 0.6rem)); // nudge down to clear the label
+    background: none;
+    border: none;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 1.1rem;
+}
+
+.eyeToggle:hover {
+    color: var(--text);
 }
 
 .form {

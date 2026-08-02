@@ -7,6 +7,10 @@ import com.imh.backend.repositories.UserRepository;
 import com.imh.backend.services.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -65,17 +69,23 @@ public class MemberController {
     }
 
     /**
-     * GET /api/members
+     * API: GET /api/members
      * GET /api/members?organizationId={organizationId}
+     * GET /api/members?search={firstName or lastName or "first last"}
      * organizationId is optional: provide it to filter to one organization,
-     * omit it to list every member across every organization.
+     * omit it to list every member across every organization. search matches
+     * against the member's first and/or last name (case-insensitive, partial).
+     * Paginated, sorted by most recently added member first by default.
      */
     @GetMapping
-    public ResponseEntity<List<OrganizationMemberResponse>> getMembers(
-            @RequestParam(required = false) Long organizationId
+    public ResponseEntity<Page<OrganizationMemberResponse>> getMembers(
+            @RequestParam(required = false) Long organizationId,
+            @RequestParam(required = false) String search,
+            @PageableDefault(size = 10, sort = "joinedAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        return ResponseEntity.ok(memberService.getMembers(organizationId));
+        return ResponseEntity.ok(memberService.getMembers(organizationId, search, pageable));
     }
+
 
     /**
      * Extracts the authenticated user's id. Mirrors OrganizationController's

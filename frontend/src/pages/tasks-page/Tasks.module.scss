@@ -1,0 +1,127 @@
+.page {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.backRow {
+    display: flex;
+}
+
+.topControls {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+.searchWrap {
+    min-width: 260px;
+    flex: 1 1 260px;
+}
+
+.assigneeField {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 220px;
+    flex: 1 1 220px;
+}
+
+.assigneeLabel {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.assigneeSelect {
+    padding: 0.8rem 0.95rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--muted);
+    outline: none;
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.errorBanner {
+    background: #FEF2F2;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.errorClose {
+    background: none;
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.statusBadge {
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+}
+
+.rowActions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.newTaskWrap {
+    display: flex;
+}
+
+.projectErrorText {
+    color: var(--danger);
+}
+
+/* Mobile: search field, assignee dropdown, and (in Card actions) the
+   New Task button all take full width and stack, left-aligned. */
+@media (max-width: 480px) {
+    .page {
+        padding: 1rem;
+    }
+
+    .topControls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .searchWrap,
+    .assigneeField {
+        flex: none;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .rowActions {
+        justify-content: flex-start;
+    }
+
+    .newTaskWrap {
+        width: 100%;
+    }
+
+    .newTaskWrap button {
+        width: 100%;
+    }
+}

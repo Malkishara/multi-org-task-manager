@@ -13,6 +13,7 @@ import Organization from './pages/organization/Organization';
 import OrganizationMembersPage from './pages/organization-member-page/OrganizationMembersPage';
 import ProjectsPage from './pages/project-page/ProjectsPage';
 import ProfilePage from './pages/profile-page/ProfilePage';
+import TasksPage from './pages/tasks-page/TasksPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -65,6 +66,16 @@ const AppRoutes = () => {
                     </ProtectedRoute>
                   }
                 />
+
+                 {/* Tasks - tasks for a single project, reached by clicking a project name */}
+        <Route
+          path="/projects/:projectId/tasks"
+          element={
+            <ProtectedRoute>
+              <TasksPage />
+            </ProtectedRoute>
+          }
+        />
 
                 {/* Profile */}
 

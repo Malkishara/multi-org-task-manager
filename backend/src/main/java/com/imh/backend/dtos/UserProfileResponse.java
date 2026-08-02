@@ -2,6 +2,8 @@ package com.imh.backend.dtos;
 
 import com.imh.backend.entities.User;
 
+import java.util.List;
+
 /**
  * Response DTO for returning authenticated user's profile information.
  *
@@ -17,6 +19,7 @@ public record UserProfileResponse(
         String lastName,
         String email,
         User.Role role,
-        boolean active
+        boolean active,
+        List<OrganizationMembershipResponse> organizations
 ) {
 }

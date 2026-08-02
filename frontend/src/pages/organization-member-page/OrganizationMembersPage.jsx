@@ -1,132 +1,422 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import Card from '../../components/card/Card';
-import Table from '../../components/table/Table';
-import Button from '../../components/button/Button';
-import AddMemberModal from '../../components/add-member-model/AddMemberModal';
-import { fetchOrganizations } from '../../redux/slices/organizationSlice';
-import { fetchMembers, removeMember, clearMembers } from '../../redux/slices/Memberslice';
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
-// Reads whichever shape OrganizationMemberResponse actually uses. Adjust
-// these two lines if your DTO's field names differ (e.g. userName vs
-// user.name).
+import Card from "../../components/card/Card";
+import Table from "../../components/table/Table";
+import Button from "../../components/button/Button";
+import SearchField from "../../components/search-field/SearchField";
+import Pagination from "../../components/pagination/Pagination";
+
+import AddMemberModal from "../../components/add-member-model/AddMemberModal";
+
+import { fetchOrganizations } from "../../redux/slices/organizationSlice";
+
+import {
+    fetchMembers,
+    removeMember,
+    setMemberSearchTerm
+} from "../../redux/slices/Memberslice";
+
+import { canManageMembers } from "../../utils/permissions";
+
+import styles from "./OrganizationMembersPage.module.scss";
+
+
 function getMemberName(member) {
-  return member.userName || member.user?.name || member.name || '—';
+    return (
+        member.userFullName ||
+        member.userName ||
+        member.user?.name ||
+        `${member.user?.firstName || ""} ${member.user?.lastName || ""}`.trim() ||
+        "—"
+    );
 }
+
+
 function getMemberEmail(member) {
-  return member.userEmail || member.user?.email || member.email || '—';
+    return (
+        member.userEmail ||
+        member.user?.email ||
+        member.email ||
+        "—"
+    );
 }
+
 
 export default function OrganizationMembersPage() {
-  const dispatch = useDispatch();
 
-  const { items: organizations, loading: orgLoading } = useSelector((state) => state.organizations);
-  const { list: members, status: memberStatus, removingId } = useSelector((state) => state.members);
 
-  // "Which org is selected" is UI-only state - it doesn't need to live in
-  // Redux, so it's local to this component.
-  const [selectedOrganizationId, setSelectedOrganizationId] = useState(null);
-  const [showAddModal, setShowAddModal] = useState(false);
+    const dispatch = useDispatch();
 
-  useEffect(() => {
-    dispatch(fetchOrganizations());
-  }, [dispatch]);
 
-  useEffect(() => {
-    if (selectedOrganizationId) {
-      dispatch(fetchMembers(selectedOrganizationId));
-    } else {
-      dispatch(clearMembers());
-    }
-  }, [dispatch, selectedOrganizationId]);
+    const {
+        items: organizations = [],
+        loading: orgLoading = false
+    } = useSelector(
+        state => state.organizations
+    );
 
-  const handleOrgChange = (event) => {
-    const value = event.target.value;
-    setSelectedOrganizationId(value ? Number(value) : null);
-  };
 
-  const handleRemove = (member) => {
-    dispatch(removeMember(member.id));
-  };
+    const {
+        list = [],
+        status,
+        searchTerm = "",
+        page = 0,
+        size = 10,
+        totalPages = 0,
+        totalElements = 0,
+        removingId
+    } = useSelector(
+        state => state.members
+    );
 
-  const columns = [
-    { key: 'name', header: 'Name', render: getMemberName },
-    { key: 'email', header: 'Email', render: getMemberEmail },
-    { key: 'role', header: 'Role', render: (m) => m.role },
-    {
-      key: 'actions',
-      header: '',
-      align: 'right',
-      render: (m) => (
-        <Button
-          variant="danger"
-          onClick={() => handleRemove(m)}
-          disabled={removingId === m.id}
-        >
-          {removingId === m.id ? 'Removing...' : 'Remove'}
-        </Button>
-      ),
-    },
-  ];
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      <Card title="Organization members" subtitle="Select an organization to view and manage its users.">
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem', flexWrap: 'wrap' }}>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', minWidth: '260px' }}>
-            <span style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text)' }}>Organization</span>
-            <select
-              value={selectedOrganizationId || ''}
-              onChange={handleOrgChange}
-              disabled={orgLoading}
-              style={{
-                padding: '0.8rem 0.95rem',
-                borderRadius: '0.75rem',
-                border: '1px solid var(--muted)',
-                outline: 'none',
-                fontSize: '1rem',
-              }}
+    const [selectedOrganizationId, setSelectedOrganizationId] = useState(null);
+
+    const [showAddModal, setShowAddModal] = useState(false);
+
+
+
+    useEffect(() => {
+
+        dispatch(fetchOrganizations());
+
+    }, [dispatch]);
+
+
+
+    useEffect(() => {
+
+        // Members are scoped to a single organization - don't call the API
+        // (and don't show a stale/empty "All organizations" list) until the
+        // user has actually picked one.
+        if (!selectedOrganizationId) return;
+
+        dispatch(
+            fetchMembers({
+                organizationId: selectedOrganizationId,
+                search: searchTerm,
+                page,
+                size
+            })
+        );
+
+    }, [
+        dispatch,
+        selectedOrganizationId,
+        page
+    ]);
+
+
+
+    const handleOrganizationChange = (e) => {
+
+        const id = e.target.value ? Number(e.target.value) : null;
+
+        setSelectedOrganizationId(id);
+
+        if (!id) return;
+
+        // Reset to first page whenever the org filter changes, otherwise
+        // we could request a page that's out of range for the new org.
+        dispatch(
+            fetchMembers({
+                organizationId: id,
+                search: searchTerm,
+                page: 0,
+                size
+            })
+        );
+
+    };
+
+
+
+    const handleSearch = (value) => {
+
+        dispatch(
+            setMemberSearchTerm(value)
+        );
+
+        if (!selectedOrganizationId) return;
+
+        dispatch(
+            fetchMembers({
+                organizationId: selectedOrganizationId,
+                search: value,
+                page: 0,
+                size
+            })
+        );
+
+    };
+
+
+
+    const handlePageChange = (nextPage) => {
+
+        if (!selectedOrganizationId) return;
+
+        dispatch(
+            fetchMembers({
+                organizationId: selectedOrganizationId,
+                search: searchTerm,
+                page: nextPage,
+                size
+            })
+        );
+
+    };
+
+
+
+    const handleRemove = (member) => {
+
+        dispatch(removeMember(member.id));
+
+    };
+
+
+
+    // Removing members is scoped to the currently selected organization,
+    // so this is computed once per render rather than per-row.
+    const canRemoveMembers = canManageMembers(selectedOrganizationId);
+
+
+
+    const columns = [
+
+        {
+            key: "name",
+            header: "Name",
+            render: getMemberName
+        },
+
+
+        {
+            key: "email",
+            header: "Email",
+            render: getMemberEmail
+        },
+
+
+        {
+            key: "role",
+            header: "Role",
+            render: (m) => m.role || "MEMBER"
+        },
+
+
+        {
+            key: "joinedAt",
+            header: "Added",
+            render: (m) =>
+                m.joinedAt
+                    ?
+                    new Date(m.joinedAt)
+                        .toLocaleDateString()
+                    :
+                    "—"
+        },
+
+
+        {
+            key: "actions",
+            header: "Actions",
+            align: "right",
+
+            render: (m) => (
+
+                canRemoveMembers ? (
+
+                    <Button
+
+                        variant="danger"
+
+                        disabled={
+                            removingId === m.id
+                        }
+
+                        onClick={() =>
+                            handleRemove(m)
+                        }
+
+                    >
+
+                        {
+                            removingId === m.id
+                                ?
+                                "Removing..."
+                                :
+                                "Remove"
+                        }
+
+
+                    </Button>
+
+                ) : (
+
+                    <span className={styles.readOnlyText}>
+                        View only
+                    </span>
+
+                )
+            )
+        }
+
+    ];
+
+
+
+    return (
+        <div className={styles.page}>
+
+            <Card
+                title="Organization Members"
+                subtitle="Manage members inside your organizations."
             >
-              <option value="">{orgLoading ? 'Loading organizations...' : 'Select an organization'}</option>
-              {organizations.map((org) => (
-                <option key={org.id} value={org.id}>
-                  {org.name}
-                </option>
-              ))}
-            </select>
-          </label>
 
-          <Button
-            variant="primary"
-            disabled={!selectedOrganizationId}
-            onClick={() => setShowAddModal(true)}
-          >
-            + Add user
-          </Button>
+                {/* Top Controls */}
+                <div className={styles.topControls}>
+
+                    {/* Organization Dropdown */}
+                    <label className={styles.orgField}>
+
+                        <span className={styles.orgLabel}>
+                            Organization
+                        </span>
+
+
+                        <select
+                            value={selectedOrganizationId || ""}
+                            onChange={handleOrganizationChange}
+                            disabled={orgLoading}
+                            className={styles.orgSelect}
+                        >
+
+                            <option value="" disabled>
+                                {
+                                    orgLoading
+                                        ? "Loading organizations..."
+                                        : "Select an organization"
+                                }
+                            </option>
+
+
+                            {
+                                organizations.map((org) => (
+
+                                    <option
+                                        key={org.id}
+                                        value={org.id}
+                                    >
+                                        {org.name}
+                                    </option>
+
+                                ))
+                            }
+
+
+                        </select>
+
+
+                    </label>
+
+
+
+                    {/* Search */}
+                    <div className={styles.searchWrap}>
+
+                        <SearchField
+                            initialValue={searchTerm}
+                            onSearch={handleSearch}
+                            placeholder="Search member name..."
+                            disabled={!selectedOrganizationId}
+                        />
+
+                    </div>
+
+
+
+                    {/* Add Member Button - only the org's OWNER (or SUPER_ADMIN)
+                        can add members, same rule as removing them. */}
+                    <div className={styles.addMemberWrap}>
+
+                        <Button
+                            variant="primary"
+                            disabled={!selectedOrganizationId || !canRemoveMembers}
+                            onClick={() => setShowAddModal(true)}
+                        >
+                            Add Member
+                        </Button>
+
+
+                    </div>
+
+
+                </div>
+
+
+
+                {/* Table */}
+                {
+                    !selectedOrganizationId ? (
+
+                        <p className={styles.loadingText}>
+                            Select an organization to view its members.
+                        </p>
+
+                    ) : status === "loading" ? (
+
+                        <p className={styles.loadingText}>
+                            Loading members...
+                        </p>
+
+                    ) : (
+
+                        <>
+
+                            <Table
+                                columns={columns}
+                                data={list}
+                                keyField="id"
+                                emptyMessage="No members found."
+                            />
+
+
+                            <Pagination
+                                page={page}
+                                totalPages={totalPages}
+                                totalElements={totalElements}
+                                pageSize={size}
+                                onPageChange={handlePageChange}
+                                disabled={status === "loading"}
+                            />
+
+
+                        </>
+
+                    )
+                }
+
+
+            </Card>
+
+
+
+            {
+                showAddModal && selectedOrganizationId && (
+
+                    <AddMemberModal
+                        organizationId={selectedOrganizationId}
+                        onClose={() => setShowAddModal(false)}
+                    />
+
+                )
+            }
+
+
         </div>
-      </Card>
+    );
 
-      <Card>
-        {!selectedOrganizationId ? (
-          <p style={{ color: 'var(--muted)', textAlign: 'center', padding: '1rem 0' }}>
-            Select an organization above to see its members.
-          </p>
-        ) : (
-          <Table
-            columns={columns}
-            data={members}
-            keyField="id"
-            emptyMessage={memberStatus === 'loading' ? 'Loading members...' : 'No members yet.'}
-          />
-        )}
-      </Card>
-
-      {showAddModal && selectedOrganizationId && (
-        <AddMemberModal
-          organizationId={selectedOrganizationId}
-          onClose={() => setShowAddModal(false)}
-        />
-      )}
-    </div>
-  );
 }

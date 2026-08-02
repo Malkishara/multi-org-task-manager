@@ -1,0 +1,71 @@
+.page {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+}
+
+.actions > :first-child {
+    flex: 1;          // Search field fills remaining space
+    min-width: 250px;
+}
+
+.actions > :last-child {
+    flex: 0 0 auto;   // Button keeps its natural width
+    white-space: nowrap;
+}
+
+.errorBanner {
+    background: #FEF2F2;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.errorClose {
+    background: none;
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.loadingText {
+    color: var(--muted);
+}
+
+.tableActions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+/* Stack search + button on small screens, left-aligned */
+@media (max-width: 480px) {
+    .page {
+        padding: 1rem;
+    }
+
+    .actions {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .actions > * {
+        width: 100%;
+    }
+}

@@ -2,6 +2,7 @@ import React, { useState , useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import toast from 'react-hot-toast';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 
 
 import Button from '../../components/button/Button';
@@ -37,17 +38,17 @@ export default function AuthPage({ mode }) {
     lastName:'',
     email:'',
     password:'',
+    confirmPassword:'',
 
   });
 
 
-useEffect(() => {
 
-    toast.success("Toast is working");
-
-}, []);
 
   const [loading,setLoading] = useState(false);
+  const [fieldError, setFieldError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
 
 
@@ -62,6 +63,8 @@ useEffect(() => {
 
     }));
 
+    if (fieldError) setFieldError('');
+
   };
 
 
@@ -71,6 +74,12 @@ useEffect(() => {
 
     event.preventDefault();
 
+    if (isSignup && form.password !== form.confirmPassword) {
+      setFieldError('Passwords do not match');
+      return;
+    }
+
+    setFieldError('');
     setLoading(true);
 
 
@@ -178,6 +187,8 @@ return (
 
 <div className={styles.formContainer}>
 
+  <div className={styles.brand}>TaskFlow</div>
+
 
 <h2 className={styles.title}>
 
@@ -274,13 +285,15 @@ required
 
 
 
+<div className={styles.passwordField}>
+
 <TextField
 
 label="Password"
 
 name="password"
 
-type="password"
+type={showPassword ? 'text' : 'password'}
 
 value={form.password}
 
@@ -289,6 +302,82 @@ onChange={handleChange}
 required
 
 />
+
+<button
+
+type="button"
+
+className={styles.eyeToggle}
+
+onClick={() => setShowPassword((prev) => !prev)}
+
+aria-label={showPassword ? 'Hide password' : 'Show password'}
+
+tabIndex={-1}
+
+>
+
+{showPassword ? <FiEyeOff /> : <FiEye />}
+
+</button>
+
+</div>
+
+
+
+{
+isSignup &&
+
+<div className={styles.passwordField}>
+
+<TextField
+
+label="Confirm Password"
+
+name="confirmPassword"
+
+type={showConfirmPassword ? 'text' : 'password'}
+
+value={form.confirmPassword}
+
+onChange={handleChange}
+
+required
+
+/>
+
+<button
+
+type="button"
+
+className={styles.eyeToggle}
+
+onClick={() => setShowConfirmPassword((prev) => !prev)}
+
+aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+
+tabIndex={-1}
+
+>
+
+{showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+
+</button>
+
+</div>
+
+}
+
+
+
+{
+fieldError &&
+
+<p className={styles.fieldError}>
+{fieldError}
+</p>
+
+}
 
 
 

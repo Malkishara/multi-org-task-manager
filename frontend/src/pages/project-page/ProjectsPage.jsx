@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import Card from '../../components/card/Card';
 import Table from '../../components/table/Table';
 import Button from '../../components/button/Button';
+import SearchField from '../../components/search-field/SearchField';
+import Pagination from '../../components/pagination/Pagination';
 import ConfirmModal from '../../components/confirm-modal/ConfirmModal';
 import ProjectFormModal from '../../components/project-form-model/ProjectFormModal';
 import ProjectStatusModal from '../../components/project-status-model/ProjectStatusModal';
@@ -15,7 +18,10 @@ import {
   deleteProject,
   clearProjectError,
   clearProjects,
+  setProjectSearchTerm,
 } from '../../redux/slices/projectSlice';
+import { canCreateOrDeleteProject, canEditProjectOrStatus } from '../../utils/permissions';
+import styles from './Project.module.scss';
 
 const STATUS_COLORS = {
   NOT_STARTED: '#94A3B8',
@@ -27,6 +33,7 @@ const STATUS_COLORS = {
 
 export default function ProjectsPage() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const { items: organizations, loading: orgLoading } = useSelector((state) => state.organizations);
   const {
@@ -34,9 +41,17 @@ export default function ProjectsPage() {
     loading: projectsLoading,
     error,
     actionLoadingId,
+    searchTerm,
+    page,
+    size,
+    totalPages,
+    totalElements,
   } = useSelector((state) => state.projects);
 
-  // "Which org is selected" is UI-only - kept local, same as OrganizationMembersPage.
+  // null = no organization selected yet. UI-only, kept local like
+  // OrganizationMembersPage. Projects are scoped to a single organization,
+  // so we don't call the API (or show a stale/empty "all" list) until the
+  // user has actually picked one.
   const [selectedOrganizationId, setSelectedOrganizationId] = useState(null);
 
   const [formOpen, setFormOpen] = useState(false);
@@ -54,16 +69,37 @@ export default function ProjectsPage() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (selectedOrganizationId) {
-      dispatch(fetchProjects(selectedOrganizationId));
-    } else {
-      dispatch(clearProjects());
-    }
-  }, [dispatch, selectedOrganizationId]);
+    if (!selectedOrganizationId) return;
+
+    dispatch(
+      fetchProjects({ organizationId: selectedOrganizationId, search: searchTerm, page, size })
+    );
+  }, [dispatch, selectedOrganizationId, page]);
 
   const handleOrgChange = (event) => {
     const value = event.target.value;
-    setSelectedOrganizationId(value ? Number(value) : null);
+    const id = value ? Number(value) : null;
+    setSelectedOrganizationId(id);
+
+    if (!id) return;
+
+    // Reset to first page whenever the org filter changes, otherwise
+    // we could request a page that's out of range for the new org.
+    dispatch(fetchProjects({ organizationId: id, search: searchTerm, page: 0, size }));
+  };
+
+  const handleSearch = (value) => {
+    dispatch(setProjectSearchTerm(value));
+
+    if (!selectedOrganizationId) return;
+
+    dispatch(fetchProjects({ organizationId: selectedOrganizationId, search: value, page: 0, size }));
+  };
+
+  const handlePageChange = (nextPage) => {
+    if (!selectedOrganizationId) return;
+
+    dispatch(fetchProjects({ organizationId: selectedOrganizationId, search: searchTerm, page: nextPage, size }));
   };
 
   const openCreateForm = () => {
@@ -134,23 +170,33 @@ export default function ProjectsPage() {
     }
   };
 
+  const goToTasks = (project) => {
+    navigate(`/projects/${project.id}/tasks`);
+  };
+
+  // Both scoped to the currently selected organization, computed once per
+  // render rather than per-row since every row belongs to the same org here.
+  const canCreateOrDelete = canCreateOrDeleteProject(selectedOrganizationId);
+  const canEditOrStatus = canEditProjectOrStatus(selectedOrganizationId);
+
   const columns = [
-    { key: 'name', header: 'Name' },
+    {
+      key: 'name',
+      header: 'Name',
+      render: (row) => (
+        <button onClick={() => goToTasks(row)} className={styles.nameLink}>
+          {row.name}
+        </button>
+      ),
+    },
     { key: 'description', header: 'Description', render: (row) => row.description || '—' },
     {
       key: 'status',
       header: 'Status',
       render: (row) => (
         <span
-          style={{
-            display: 'inline-block',
-            padding: '0.25rem 0.65rem',
-            borderRadius: '999px',
-            fontSize: '0.8rem',
-            fontWeight: 600,
-            color: '#fff',
-            background: STATUS_COLORS[row.status] || '#94A3B8',
-          }}
+          className={styles.statusBadge}
+          style={{ background: STATUS_COLORS[row.status] || '#94A3B8' }}
         >
           {row.status?.replace('_', ' ')}
         </span>
@@ -160,18 +206,11 @@ export default function ProjectsPage() {
       key: 'progress',
       header: 'Progress',
       render: (row) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: '120px' }}>
-          <div style={{ flex: 1, background: '#E2E8F0', borderRadius: '999px', height: '8px' }}>
-            <div
-              style={{
-                width: `${row.progress ?? 0}%`,
-                background: 'var(--blue)',
-                height: '100%',
-                borderRadius: '999px',
-              }}
-            />
+        <div className={styles.progressCell}>
+          <div className={styles.progressTrack}>
+            <div className={styles.progressFill} style={{ width: `${row.progress ?? 0}%` }} />
           </div>
-          <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>{row.progress ?? 0}%</span>
+          <span className={styles.progressLabel}>{row.progress ?? 0}%</span>
         </div>
       ),
     },
@@ -180,44 +219,49 @@ export default function ProjectsPage() {
       header: '',
       align: 'right',
       render: (row) => (
-        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-          <Button variant="white" onClick={() => setStatusTarget(row)} disabled={actionLoadingId === row.id}>
-            Status
-          </Button>
-          <Button variant="white" onClick={() => openEditForm(row)}>
-            Edit
-          </Button>
-          <Button
-            variant="danger"
-            onClick={() => setDeleteTarget(row)}
-            disabled={actionLoadingId === row.id}
-          >
-            Delete
-          </Button>
+        <div className={styles.rowActions}>
+          {canEditOrStatus && (
+            <Button variant="white" onClick={() => setStatusTarget(row)} disabled={actionLoadingId === row.id}>
+              Status
+            </Button>
+          )}
+          {canEditOrStatus && (
+            <Button variant="white" onClick={() => openEditForm(row)}>
+              Edit
+            </Button>
+          )}
+          {canCreateOrDelete && (
+            <Button
+              variant="danger"
+              onClick={() => setDeleteTarget(row)}
+              disabled={actionLoadingId === row.id}
+            >
+              Delete
+            </Button>
+          )}
+          {!canEditOrStatus && !canCreateOrDelete && (
+            <span className={styles.readOnlyText}>View only</span>
+          )}
         </div>
       ),
     },
   ];
 
   return (
-    <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+    <div className={styles.page}>
       <Card title="Projects" subtitle="Select an organization to view and manage its projects.">
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem', flexWrap: 'wrap' }}>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', minWidth: '260px' }}>
-            <span style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text)' }}>Organization</span>
+        <div className={styles.topControls}>
+          <label className={styles.orgField}>
+            <span className={styles.orgLabel}>Organization</span>
             <select
               value={selectedOrganizationId || ''}
               onChange={handleOrgChange}
               disabled={orgLoading}
-              style={{
-                padding: '0.8rem 0.95rem',
-                borderRadius: '0.75rem',
-                border: '1px solid var(--muted)',
-                outline: 'none',
-                fontSize: '1rem',
-              }}
+              className={styles.orgSelect}
             >
-              <option value="">{orgLoading ? 'Loading organizations...' : 'Select an organization'}</option>
+              <option value="" disabled>
+                {orgLoading ? 'Loading organizations...' : 'Select an organization'}
+              </option>
               {organizations.map((org) => (
                 <option key={org.id} value={org.id}>
                   {org.name}
@@ -226,48 +270,59 @@ export default function ProjectsPage() {
             </select>
           </label>
 
-          <Button variant="primary" disabled={!selectedOrganizationId} onClick={openCreateForm}>
-            + New project
-          </Button>
+          <div className={styles.searchWrap}>
+            <SearchField
+              initialValue={searchTerm}
+              onSearch={handleSearch}
+              placeholder="Search project name..."
+              disabled={!selectedOrganizationId}
+            />
+          </div>
+
+          {/* Creating a project is restricted the same way deleting is -
+              only the organization's OWNER (or SUPER_ADMIN). */}
+          <div className={styles.newProjectWrap}>
+            <Button
+              variant="primary"
+              disabled={!selectedOrganizationId || !canCreateOrDelete}
+              onClick={openCreateForm}
+            >
+              Create Project
+            </Button>
+          </div>
         </div>
       </Card>
 
       <Card>
         {error && (
-          <div
-            style={{
-              background: '#FEF2F2',
-              border: '1px solid var(--danger)',
-              color: 'var(--danger)',
-              borderRadius: '0.75rem',
-              padding: '0.75rem 1rem',
-              marginBottom: '1rem',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
+          <div className={styles.errorBanner}>
             <span>{error}</span>
-            <button
-              onClick={() => dispatch(clearProjectError())}
-              style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontWeight: 700, fontSize: '1rem' }}
-            >
+            <button onClick={() => dispatch(clearProjectError())} className={styles.errorClose}>
               ×
             </button>
           </div>
         )}
 
         {!selectedOrganizationId ? (
-          <p style={{ color: 'var(--muted)', textAlign: 'center', padding: '1rem 0' }}>
-            Select an organization above to see its projects.
-          </p>
+          <p className={styles.loadingText}>Select an organization to view its projects.</p>
         ) : (
-          <Table
-            columns={columns}
-            data={projects}
-            keyField="id"
-            emptyMessage={projectsLoading ? 'Loading projects...' : 'No projects yet. Create the first one.'}
-          />
+          <>
+            <Table
+              columns={columns}
+              data={projects}
+              keyField="id"
+              emptyMessage={projectsLoading ? 'Loading projects...' : 'No projects yet.'}
+            />
+
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              totalElements={totalElements}
+              pageSize={size}
+              onPageChange={handlePageChange}
+              disabled={projectsLoading}
+            />
+          </>
         )}
       </Card>
 

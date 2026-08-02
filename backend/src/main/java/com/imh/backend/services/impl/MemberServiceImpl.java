@@ -14,6 +14,8 @@ import com.imh.backend.repositories.UserRepository;
 import com.imh.backend.services.MemberService;
 import com.imh.backend.validations.OrganizationValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,27 +82,26 @@ public class MemberServiceImpl implements MemberService {
     }
 
     /**
-     * API: GET /api/members?organizationId=...
-     * organizationId is optional - omit it to list every member across
-     * every organization.
+     * API: GET /api/members
+     * organizationId is optional (null -> members across every organization).
+     * search is optional and matches the member's first and/or last name.
+     * Each result includes the member's user account status.
      */
     @Override
     @Transactional(readOnly = true)
-    public List<OrganizationMemberResponse> getMembers(Long organizationId) {
-        List<OrganizationMember> members;
-
+    public Page<OrganizationMemberResponse> getMembers(Long organizationId, String search, Pageable pageable) {
         if (organizationId != null) {
             // Confirms the organization exists so a bad id 404s instead of
-            // silently returning an empty list.
+            // silently returning an empty page.
             getOrganizationOrThrow(organizationId);
-            members = organizationMemberRepository.findByOrganizationId(organizationId);
-        } else {
-            members = organizationMemberRepository.findAll();
         }
 
-        return members.stream()
-                .map(mapper::toMemberResponse)
-                .collect(Collectors.toList());
+        String trimmedSearch = (search != null && !search.isBlank()) ? search.trim() : null;
+
+        Page<OrganizationMember> members =
+                organizationMemberRepository.search(organizationId, trimmedSearch, pageable);
+
+        return members.map(mapper::toMemberResponse);
     }
 
     // ---- private helpers ----

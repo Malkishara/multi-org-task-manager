@@ -9,15 +9,19 @@ import com.imh.backend.entities.Project;
 import com.imh.backend.entities.User;
 import com.imh.backend.exceptions.ResourceNotFoundException;
 import com.imh.backend.mappers.ProjectMapper;
+import com.imh.backend.repositories.OrganizationMemberRepository;
 import com.imh.backend.repositories.OrganizationRepository;
 import com.imh.backend.repositories.ProjectRepository;
 import com.imh.backend.repositories.UserRepository;
 import com.imh.backend.services.ProjectService;
 import com.imh.backend.validations.ProjectValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,6 +35,7 @@ public class ProjectServiceImpl implements ProjectService {
     private final UserRepository userRepository;
     private final ProjectValidator validator;
     private final ProjectMapper mapper;
+    private final OrganizationMemberRepository organizationMemberRepository;
 
     /**
      * API: POST /api/projects
@@ -121,25 +126,47 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     /**
-     * API: GET /api/projects?organizationId=...
+     * API: GET /api/projects?organizationId=&search=&page=&size=
+     *
+     * - SUPER_ADMIN: organizationId optional. Omitting it returns every
+     *   project across every organization.
+     * - Everyone else: organizationId is required, and the caller must be
+     *   a member of that organization (any role - OWNER, ADMIN, or MEMBER)
+     *   to view its projects.
+     * - search matches project name or description, case-insensitive.
      */
     @Override
     @Transactional(readOnly = true)
-    public List<ProjectResponse> getProjects(Long organizationId) {
-        List<Project> projects;
+    public Page<ProjectResponse> getProjects(Long organizationId, String search, Pageable pageable, String currentUserEmail) throws AccessDeniedException{
+
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("No user found with email " + currentUserEmail));
+
+        boolean isSuperAdmin = currentUser.getRole() == User.Role.SUPER_ADMIN;
+        Long currentUserId = currentUser.getId();
 
         if (organizationId != null) {
             getOrganizationOrThrow(organizationId);
-            projects = projectRepository.findByOrganizationId(organizationId);
-        } else {
-            projects = projectRepository.findAll();
+
+            if (!isSuperAdmin) {
+                boolean isMember = organizationMemberRepository
+                        .existsByOrganizationIdAndUserId(organizationId, currentUserId);
+
+                if (!isMember) {
+                    throw new AccessDeniedException("You are not a member of this organization");
+                }
+            }
+        } else if (!isSuperAdmin) {
+            throw new AccessDeniedException("organizationId is required");
         }
 
-        return projects.stream()
-                .map(mapper::toResponse)
-                .collect(Collectors.toList());
-    }
+        String trimmedSearch = (search != null && !search.isBlank()) ? search.trim().toLowerCase() : null;
+        String searchPattern = trimmedSearch != null ? "%" + trimmedSearch + "%" : null;
 
+        Page<Project> projects = projectRepository.search(organizationId, searchPattern, pageable);
+
+        return projects.map(mapper::toResponse);
+    }
     // ---- private helpers ----
 
     private Organization getOrganizationOrThrow(Long organizationId) {
@@ -156,4 +183,10 @@ public class ProjectServiceImpl implements ProjectService {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + userId));
     }
+
+
+    // ---- private helpers ----
+
+
+
 }

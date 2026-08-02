@@ -4,7 +4,10 @@ import com.imh.backend.dtos.CreateProjectRequest;
 import com.imh.backend.dtos.ProjectResponse;
 import com.imh.backend.dtos.UpdateProjectRequest;
 import com.imh.backend.dtos.UpdateProjectStatusRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 
 public interface ProjectService {
@@ -23,5 +26,4 @@ public interface ProjectService {
      * organizationId is optional - null returns every project across every
      * organization.
      */
-    List<ProjectResponse> getProjects(Long organizationId);
-}
+    Page<ProjectResponse> getProjects(Long organizationId, String search, Pageable pageable, String email) throws AccessDeniedException;}

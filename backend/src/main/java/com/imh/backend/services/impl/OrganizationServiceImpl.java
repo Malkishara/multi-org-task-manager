@@ -16,6 +16,8 @@ import com.imh.backend.repositories.UserRepository;
 import com.imh.backend.services.OrganizationService;
 import com.imh.backend.validations.OrganizationValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -90,18 +92,6 @@ public class OrganizationServiceImpl implements OrganizationService {
         return mapper.toResponse(getOrganizationOrThrow(organizationId));
     }
 
-    /**
-     * API: GET /api/organizations
-     * Lists every organization owned by the current user.
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public List<OrganizationResponse> getMyOrganizations(Long currentUserId) {
-        return organizationRepository.findByOwnerId(currentUserId)
-                .stream()
-                .map(mapper::toResponse)
-                .collect(Collectors.toList());
-    }
 
     /**
      * API: PUT /api/organizations/{id}
@@ -157,6 +147,35 @@ public class OrganizationServiceImpl implements OrganizationService {
         organization.setActive(active);
 
         return mapper.toResponse(organizationRepository.save(organization));
+    }
+
+    /**
+     * API: GET /api/organizations
+     * Super admins get every organization in the system. Regular users get
+     * every organization they have any relationship with - either they're
+     * the Organization.owner, or they have an OrganizationMember row for it
+     * (role OWNER/ADMIN/MEMBER) - so being added as a member or admin of
+     * someone else's organization surfaces it in their list too, not just
+     * organizations they personally created. Name filter and pagination
+     * apply either way.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Page<OrganizationResponse> getOrganizations(Long currentUserId, String name, boolean isSuperAdmin, Pageable pageable) {
+        boolean hasNameFilter = name != null && !name.isBlank();
+        String trimmedName = hasNameFilter ? name.trim() : null;
+
+        Page<Organization> organizations;
+
+        if (isSuperAdmin) {
+            organizations = hasNameFilter
+                    ? organizationRepository.findByNameContainingIgnoreCase(trimmedName, pageable)
+                    : organizationRepository.findAll(pageable);
+        } else {
+            organizations = organizationRepository.findAccessibleByUser(currentUserId, trimmedName, pageable);
+        }
+
+        return organizations.map(mapper::toResponse);
     }
 
     // ---- private helpers ----

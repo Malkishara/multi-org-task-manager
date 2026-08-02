@@ -6,6 +6,10 @@ import com.imh.backend.repositories.UserRepository;
 import com.imh.backend.services.OrganizationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -57,12 +61,22 @@ public class OrganizationController {
     }
 
     /**
-     * GET /api/organizations
-     * List every organization owned by the current user.
+     * API: GET /api/organizations
+     * Super admins see all organizations; everyone else sees only the
+     * organizations they own. Optional name filter (case-insensitive partial
+     * match), paginated, sorted by most recently created first by default.
      */
     @GetMapping
-    public ResponseEntity<List<OrganizationResponse>> getMyOrganizations(Authentication authentication) {
-        return ResponseEntity.ok(organizationService.getMyOrganizations(getCurrentUserId(authentication)));
+    public ResponseEntity<Page<OrganizationResponse>> getMyOrganizations(
+            @RequestParam(required = false) String name,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            Authentication authentication) {
+
+        boolean isSuperAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+
+        return ResponseEntity.ok(
+                organizationService.getOrganizations(getCurrentUserId(authentication), name, isSuperAdmin, pageable));
     }
 
     /**

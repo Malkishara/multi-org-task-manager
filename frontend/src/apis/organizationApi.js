@@ -1,7 +1,7 @@
 import axiosInstance from "./axios";
 
 // Maps 1:1 to OrganizationController:
-// GET    /api/organizations         -> list orgs owned by current user
+// GET    /api/organizations         -> paginated list (name filter, super admin sees all)
 // GET    /api/organizations/{id}    -> single org
 // POST   /api/organizations         -> create (creator becomes owner)
 // PUT    /api/organizations/{id}    -> update (owner-only)
@@ -10,9 +10,18 @@ import axiosInstance from "./axios";
 
 export const organizationApi = {
 
-    getOrganizations: async () => {
-        const response = await axiosInstance.get("/organizations");
-        return response.data;
+    // params: { name, page, size, sort } — all optional.
+    // Backend defaults: page=0, size=10, sort=createdAt,desc when omitted.
+    getOrganizations: async ({ name, page = 0, size = 10, sort = "createdAt,desc" } = {}) => {
+        const response = await axiosInstance.get("/organizations", {
+            params: {
+                ...(name ? { name } : {}),
+                page,
+                size,
+                sort,
+            },
+        });
+        return response.data; // Spring Page: { content, totalElements, totalPages, number, size, ... }
     },
 
     getOrganization: async (id) => {
@@ -30,8 +39,6 @@ export const organizationApi = {
         return response.data;
     },
 
-    // Dedicated status-only endpoint - avoids resending name/description/logoUrl
-    // just to flip the active flag.
     updateOrganizationStatus: async (id, active) => {
         const response = await axiosInstance.patch(`/organizations/${id}/status`, { active });
         return response.data;

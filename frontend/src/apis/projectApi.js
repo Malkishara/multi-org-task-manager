@@ -1,7 +1,7 @@
 import axiosInstance from "./axios";
 
 // Maps 1:1 to ProjectController:
-// GET    /api/projects?organizationId=... -> list projects (omit for all)
+// GET    /api/projects?organizationId=&search=&page=&size= -> paginated list (organizationId optional for SUPER_ADMIN)
 // GET    /api/projects/{id}               -> single project
 // POST   /api/projects                    -> create (owner/admin only)
 // PUT    /api/projects/{id}               -> update name/description/dates (owner/admin only)
@@ -10,11 +10,16 @@ import axiosInstance from "./axios";
 
 export const projectApi = {
 
-    // organizationId is optional - pass undefined/null to list every
-    // project across every organization.
-    getProjects: async (organizationId) => {
+    // organizationId is optional - required for non-super-admins, optional
+    // (omit for "all orgs") for super admins.
+    getProjects: async ({ organizationId, search, page = 0, size = 10 } = {}) => {
         const response = await axiosInstance.get("/projects", {
-            params: { organizationId },
+            params: {
+                ...(organizationId != null && { organizationId }),
+                ...(search && { search }),
+                page,
+                size,
+            },
         });
         return response.data;
     },

@@ -4,17 +4,22 @@
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { userApi } from "../../apis/userApi";
+import { setUser } from "./authSlice";
 
 const extractError = (err, fallback) =>
     err?.response?.data?.message || fallback;
 
 export const fetchProfile = createAsyncThunk(
     "profile/fetch",
-    async (_, { rejectWithValue }) => {
+    async (_, { dispatch, rejectWithValue }) => {
         try {
-            return await userApi.getProfile();
+            const profile = await userApi.getProfile();
+
+            dispatch(setUser(profile));
+
+            return profile;
         } catch (err) {
-            return rejectWithValue(extractError(err, "Failed to load profile."));
+            return rejectWithValue("Failed to load profile");
         }
     }
 );

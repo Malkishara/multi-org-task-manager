@@ -1,4 +1,5 @@
-// Organization slice for managing organization state (list, create, update, delete, toggle status)
+// Organization slice for managing organization state (paginated list, search,
+// create, update, delete, toggle status)
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { organizationApi } from "../../apis/organizationApi";
@@ -6,11 +7,12 @@ import { organizationApi } from "../../apis/organizationApi";
 const extractError = (err, fallback) =>
     err?.response?.data?.message || fallback;
 
+// arg: { name, page, size } — all optional, thunk fills in slice defaults below
 export const fetchOrganizations = createAsyncThunk(
     "organizations/fetchAll",
-    async (_, { rejectWithValue }) => {
+    async (params, { rejectWithValue }) => {
         try {
-            return await organizationApi.getOrganizations();
+            return await organizationApi.getOrganizations(params);
         } catch (err) {
             return rejectWithValue(extractError(err, "Failed to load organizations."));
         }
@@ -39,8 +41,6 @@ export const updateOrganization = createAsyncThunk(
     }
 );
 
-// Calls the dedicated status-only endpoint, so toggling doesn't need to
-// resend name/description/logoUrl.
 export const toggleOrganizationStatus = createAsyncThunk(
     "organizations/toggleStatus",
     async (organization, { rejectWithValue }) => {
@@ -71,8 +71,14 @@ const initialState = {
     items: [],
     loading: false,
     error: null,
-    // tracks which row's toggle/delete is mid-flight, so only that row's control disables
     actionLoadingId: null,
+
+    // pagination + search state
+    searchTerm: "",
+    page: 0,
+    size: 10,
+    totalPages: 0,
+    totalElements: 0,
 };
 
 const organizationSlice = createSlice({
@@ -82,26 +88,46 @@ const organizationSlice = createSlice({
         clearOrganizationError: (state) => {
             state.error = null;
         },
+        // Kept in sync separately from the fetch call so the search input
+        // can reflect the current term immediately, before the debounced
+        // fetch resolves.
+        setOrganizationSearchTerm: (state, action) => {
+            state.searchTerm = action.payload;
+        },
     },
     extraReducers: (builder) => {
         builder
-            // fetch all
-            .addCase(fetchOrganizations.pending, (state) => {
+            // fetch all (paginated)
+            .addCase(fetchOrganizations.pending, (state, action) => {
                 state.loading = true;
                 state.error = null;
+                if (action.meta.arg?.name !== undefined) {
+                    state.searchTerm = action.meta.arg.name;
+                }
             })
             .addCase(fetchOrganizations.fulfilled, (state, action) => {
                 state.loading = false;
-                state.items = action.payload;
+                const { content, totalElements, totalPages, number, size } = action.payload;
+                state.items = content;
+                state.totalElements = totalElements;
+                state.totalPages = totalPages;
+                state.page = number;
+                state.size = size;
             })
             .addCase(fetchOrganizations.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })
 
-            // create
+            // create — a full refetch (dispatched from the component) is what
+            // actually keeps pagination/totals correct; this just gives
+            // immediate feedback if we're on page 0.
             .addCase(createOrganization.fulfilled, (state, action) => {
-                state.items.unshift(action.payload);
+                if (state.page === 0) {
+                    state.items.unshift(action.payload);
+                    if (state.items.length > state.size) state.items.pop();
+                }
+                state.totalElements += 1;
             })
             .addCase(createOrganization.rejected, (state, action) => {
                 state.error = action.payload;
@@ -116,7 +142,7 @@ const organizationSlice = createSlice({
                 state.error = action.payload;
             })
 
-            // toggle status (optimistic-ish: flips immediately via per-row loading flag)
+            // toggle status
             .addCase(toggleOrganizationStatus.pending, (state, action) => {
                 state.actionLoadingId = action.meta.arg.id;
             })
@@ -137,6 +163,7 @@ const organizationSlice = createSlice({
             .addCase(deleteOrganization.fulfilled, (state, action) => {
                 state.actionLoadingId = null;
                 state.items = state.items.filter((org) => org.id !== action.payload);
+                state.totalElements = Math.max(0, state.totalElements - 1);
             })
             .addCase(deleteOrganization.rejected, (state, action) => {
                 state.actionLoadingId = null;
@@ -145,5 +172,5 @@ const organizationSlice = createSlice({
     },
 });
 
-export const { clearOrganizationError } = organizationSlice.actions;
+export const { clearOrganizationError, setOrganizationSearchTerm } = organizationSlice.actions;
 export default organizationSlice.reducer;
