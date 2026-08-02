@@ -1,6 +1,7 @@
-import React,{useState} from "react";
+import React, { useState } from "react";
 import {
     FiMenu,
+    FiX,
     FiBell,
     FiChevronDown,
     FiLogOut
@@ -26,7 +27,8 @@ export default function Navbar({
 }) {
 
 
-const [open,setOpen]=useState(false);
+const [open, setOpen] = useState(false);
+const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
 
 
@@ -43,22 +45,38 @@ menuConfig[role] || [];
 
 
 const fullName =
-`${user?.firstName || ""}
- ${user?.lastName || ""}`;
+`${user?.firstName || ""} ${user?.lastName || ""}`;
+
+
+
+const handleMenuButtonClick = () => {
+    setMobileMenuOpen((prev) => !prev);
+    onMenuClick?.();
+};
+
+
+
+const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+};
 
 
 
 return (
 
-<header className={styles.navbar}>
+<header className={styles.navbarWrap}>
+
+<div className={styles.navbar}>
 
 
 <button
 className={styles.menuButton}
-onClick={onMenuClick}
+onClick={handleMenuButtonClick}
+aria-expanded={mobileMenuOpen}
+aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
 >
 
-<FiMenu/>
+{mobileMenuOpen ? <FiX /> : <FiMenu />}
 
 </button>
 
@@ -218,6 +236,64 @@ Sign up
 
 </div>
 
+</div>
+
+
+
+{/* Mobile nav panel - shown below the navbar when the hamburger is tapped */}
+{
+mobileMenuOpen &&
+
+<nav className={styles.mobileMenu}>
+
+{
+menus.map(item=>(
+
+<NavLink
+
+key={item.path}
+
+to={item.path}
+
+onClick={closeMobileMenu}
+
+className={({isActive})=>
+
+isActive
+?
+`${styles.mobileLink} ${styles.mobileLinkActive}`
+:
+styles.mobileLink
+
+}
+
+>
+
+{item.name}
+
+</NavLink>
+
+))
+}
+
+{
+!user &&
+
+<>
+
+<NavLink to="/auth/login" className={styles.mobileLink} onClick={closeMobileMenu}>
+Login
+</NavLink>
+
+<NavLink to="/auth/signup" className={styles.mobileLink} onClick={closeMobileMenu}>
+Sign up
+</NavLink>
+
+</>
+}
+
+</nav>
+}
 
 
 </header>

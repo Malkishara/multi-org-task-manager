@@ -6,12 +6,12 @@ import { projectApi } from "../../apis/projectApi";
 const extractError = (err, fallback) =>
     err?.response?.data?.message || fallback;
 
-// organizationId is optional - omit it to fetch every project across every org.
+// { organizationId, search, page, size } - organizationId optional (super admin "all orgs")
 export const fetchProjects = createAsyncThunk(
     "projects/fetchAll",
-    async (organizationId, { rejectWithValue }) => {
+    async ({ organizationId, search, page = 0, size = 10 } = {}, { rejectWithValue }) => {
         try {
-            return await projectApi.getProjects(organizationId);
+            return await projectApi.getProjects({ organizationId, search, page, size });
         } catch (err) {
             return rejectWithValue(extractError(err, "Failed to load projects."));
         }
@@ -69,6 +69,13 @@ const initialState = {
     error: null,
     // tracks which row's status-update/delete is mid-flight, so only that row's control disables
     actionLoadingId: null,
+
+    // search + pagination
+    searchTerm: "",
+    page: 0,
+    size: 10,
+    totalPages: 0,
+    totalElements: 0,
 };
 
 const projectSlice = createSlice({
@@ -82,6 +89,13 @@ const projectSlice = createSlice({
             state.items = [];
             state.loading = false;
             state.error = null;
+            state.page = 0;
+            state.totalPages = 0;
+            state.totalElements = 0;
+        },
+        setProjectSearchTerm: (state, action) => {
+            state.searchTerm = action.payload;
+            state.page = 0;
         },
     },
     extraReducers: (builder) => {
@@ -93,7 +107,14 @@ const projectSlice = createSlice({
             })
             .addCase(fetchProjects.fulfilled, (state, action) => {
                 state.loading = false;
-                state.items = action.payload;
+
+                // Backend returns a Spring Page:
+                // { content, number, size, totalPages, totalElements }
+                state.items = action.payload.content || [];
+                state.page = action.payload.number || 0;
+                state.size = action.payload.size || 10;
+                state.totalPages = action.payload.totalPages || 0;
+                state.totalElements = action.payload.totalElements || 0;
             })
             .addCase(fetchProjects.rejected, (state, action) => {
                 state.loading = false;
@@ -138,6 +159,7 @@ const projectSlice = createSlice({
             .addCase(deleteProject.fulfilled, (state, action) => {
                 state.actionLoadingId = null;
                 state.items = state.items.filter((p) => p.id !== action.payload);
+                state.totalElements = Math.max(0, state.totalElements - 1);
             })
             .addCase(deleteProject.rejected, (state, action) => {
                 state.actionLoadingId = null;
@@ -146,5 +168,5 @@ const projectSlice = createSlice({
     },
 });
 
-export const { clearProjectError, clearProjects } = projectSlice.actions;
+export const { clearProjectError, clearProjects, setProjectSearchTerm } = projectSlice.actions;
 export default projectSlice.reducer;

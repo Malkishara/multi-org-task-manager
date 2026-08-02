@@ -8,6 +8,13 @@ import {
   updateProfile,
   clearProfileUpdateError,
 } from '../../redux/slices/profileSlice';
+import styles from './ProfilePage.module.scss';
+
+function getInitials(firstName, lastName) {
+  const a = (firstName || '').trim()[0] || '';
+  const b = (lastName || '').trim()[0] || '';
+  return (a + b).toUpperCase() || '?';
+}
 
 export default function ProfilePage() {
   const dispatch = useDispatch();
@@ -55,77 +62,110 @@ export default function ProfilePage() {
   };
 
   return (
-    <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', maxWidth: '560px' }}>
-      <Card
-        title="My profile"
-        subtitle="View and update your account details."
-        actions={
-          !editing && profile ? (
-            <Button variant="primary" onClick={startEditing}>
-              Edit
-            </Button>
-          ) : null
-        }
-      >
-        {loading ? (
-          <p style={{ color: 'var(--muted)' }}>Loading profile…</p>
-        ) : error ? (
-          <p style={{ color: 'var(--danger)' }}>{error}</p>
-        ) : !profile ? null : editing ? (
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <TextField
-                label="First name"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                disabled={updateStatus === 'loading'}
-              />
-              <TextField
-                label="Last name"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                disabled={updateStatus === 'loading'}
-              />
-            </div>
+    <div className={styles.page}>
+      <div className={styles.card}>
+        {/* Identity banner */}
+        <div className={styles.hero}>
+          <div className={styles.heroPattern} aria-hidden="true" />
 
-            {fieldError && <span style={{ color: 'var(--danger)', fontSize: '0.85rem' }}>{fieldError}</span>}
-            {updateError && <span style={{ color: 'var(--danger)', fontSize: '0.85rem' }}>{updateError}</span>}
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-              <Button type="button" variant="white" onClick={cancelEditing} disabled={updateStatus === 'loading'}>
-                Cancel
-              </Button>
-              <Button type="submit" variant="primary" disabled={updateStatus === 'loading'}>
-                {updateStatus === 'loading' ? 'Saving...' : 'Save changes'}
-              </Button>
+          {loading ? (
+            <div className={styles.heroSkeleton}>
+              <div className={styles.skeletonAvatar} />
+              <div className={styles.skeletonLines}>
+                <span />
+                <span />
+              </div>
             </div>
-          </form>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
-            <ProfileRow label="First name" value={profile.firstName} />
-            <ProfileRow label="Last name" value={profile.lastName} />
-            <ProfileRow label="Email" value={profile.email} />
-            <ProfileRow label="Role" value={profile.role} />
-            <ProfileRow
-              label="Status"
-              value={
-                <span style={{ color: profile.active ? 'var(--success)' : 'var(--danger)', fontWeight: 600 }}>
-                  {profile.active ? 'Active' : 'Inactive'}
-                </span>
-              }
-            />
-          </div>
-        )}
-      </Card>
+          ) : profile ? (
+            <div className={styles.heroContent}>
+              <div
+                className={`${styles.avatarWrap} ${profile.active ? styles.pulsing : ''}`}
+              >
+                <div className={styles.avatar}>{getInitials(profile.firstName, profile.lastName)}</div>
+              </div>
+
+              <div className={styles.identity}>
+                <h1 className={styles.name}>
+                  {profile.firstName} {profile.lastName}
+                </h1>
+                <p className={styles.email}>{profile.email}</p>
+
+                <div className={styles.badgeRow}>
+                  <span className={styles.roleBadge}>{profile.role}</span>
+                  <span className={styles.statusPill}>
+                    <span
+                      className={`${styles.dot} ${profile.active ? styles.dotActive : styles.dotInactive}`}
+                    />
+                    {profile.active ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+              </div>
+
+              {!editing && (
+                <Button variant="primary" onClick={startEditing} className={styles.editBtn}>
+                  Edit profile
+                </Button>
+              )}
+            </div>
+          ) : null}
+        </div>
+
+        {/* Body */}
+        <div className={styles.body}>
+          {error ? (
+            <p className={styles.errorBanner}>{error}</p>
+          ) : !profile ? null : editing ? (
+            <form onSubmit={handleSubmit} className={styles.form}>
+              <div className={styles.fieldRow}>
+                <div className={styles.field}>
+                  <span className={styles.fieldLabel}>First name</span>
+                  <TextField
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    disabled={updateStatus === 'loading'}
+                  />
+                </div>
+                <div className={styles.field}>
+                  <span className={styles.fieldLabel}>Last name</span>
+                  <TextField
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    disabled={updateStatus === 'loading'}
+                  />
+                </div>
+              </div>
+
+              {fieldError && <span className={styles.fieldError}>{fieldError}</span>}
+              {updateError && <span className={styles.fieldError}>{updateError}</span>}
+
+              <div className={styles.actions}>
+                <Button type="button" variant="white" onClick={cancelEditing} disabled={updateStatus === 'loading'}>
+                  Cancel
+                </Button>
+                <Button type="submit" variant="primary" disabled={updateStatus === 'loading'}>
+                  {updateStatus === 'loading' ? 'Saving…' : 'Save changes'}
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <dl className={styles.rowList}>
+              <ProfileRow label="First name" value={profile.firstName} />
+              <ProfileRow label="Last name" value={profile.lastName} />
+              <ProfileRow label="Email" value={profile.email} />
+              <ProfileRow label="Role" value={profile.role} mono />
+            </dl>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
 
-function ProfileRow({ label, value }) {
+function ProfileRow({ label, value, mono }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '0.6rem' }}>
-      <span style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{label}</span>
-      <span style={{ color: 'var(--text)', fontWeight: 500 }}>{value}</span>
+    <div className={styles.row}>
+      <dt className={styles.rowLabel}>{label}</dt>
+      <dd className={`${styles.rowValue} ${mono ? styles.rowValueMono : ''}`}>{value}</dd>
     </div>
   );
 }

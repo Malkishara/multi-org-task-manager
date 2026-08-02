@@ -6,11 +6,17 @@ import com.imh.backend.repositories.UserRepository;
 import com.imh.backend.services.ProjectService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 
 /**
@@ -91,16 +97,25 @@ public class ProjectController {
 
     /**
      * GET /api/projects
-     * GET /api/projects?organizationId={organizationId}
-     * organizationId is optional: provide it to filter to one organization,
-     * omit it to list every project across every organization.
+     * GET /api/projects?organizationId={organizationId}&search={term}&page=&size=
+     *
+     * organizationId optional for SUPER_ADMIN (omit to list every project);
+     * required for everyone else, and the caller must belong to that org.
      */
     @GetMapping
-    public ResponseEntity<List<ProjectResponse>> getProjects(
-            @RequestParam(required = false) Long organizationId
-    ) {
-        return ResponseEntity.ok(projectService.getProjects(organizationId));
+    public ResponseEntity<Page<ProjectResponse>> getProjects(
+            @RequestParam(required = false) Long organizationId,
+            @RequestParam(required = false) String search,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            Authentication authentication
+    ) throws AccessDeniedException {
+        String email = authentication.getName(); // this is the JWT "sub" claim
+
+        return ResponseEntity.ok(
+                projectService.getProjects(organizationId, search, pageable, email)
+        );
     }
+
 
     private Long getCurrentUserId(Authentication authentication) {
         String email = authentication.getName();

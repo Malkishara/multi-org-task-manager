@@ -4,7 +4,7 @@ const variants = {
   primary: { background: 'var(--navy-light)', color: 'var(--white)', border: '1px solid var(--blue)' },
   danger: { background: 'var(--danger)', color: 'var(--white)', border: '1px solid var(--danger)' },
   success: { background: 'var(--success)', color: 'var(--white)', border: '1px solid var(--success)' },
-  white: { background: 'var(--white)', color: 'var(--text)', border: '1px solid var(--border)' },
+  white: { background: 'var(--white)', color: 'var(--text)', border: '1px solid var(--blue)' },
 };
 
 export default function Button({ variant = 'primary', children, icon, className = '', ...props }) {

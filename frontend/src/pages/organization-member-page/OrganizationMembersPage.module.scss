@@ -1,0 +1,76 @@
+.page {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.topControls {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+.orgField {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 260px;
+    flex: 1 1 260px;
+}
+
+.orgLabel {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.orgSelect {
+    padding: 0.8rem 0.95rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--muted);
+    outline: none;
+    font-size: 1rem;
+    min-height: 45px;
+    width: 100%;
+}
+
+.searchWrap {
+    min-width: 260px;
+    flex: 1 1 260px;
+}
+
+.addMemberWrap {
+    margin-left: auto;
+}
+
+.loadingText {
+    color: var(--muted);
+}
+
+/* Mobile: everything full width, stacked, button not pushed right */
+@media (max-width: 480px) {
+    .page {
+        padding: 1rem;
+    }
+
+    .topControls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .orgField,
+    .searchWrap,
+    .addMemberWrap {
+        flex: none;
+        min-width: 0;
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .addMemberWrap button {
+        width: 100%;
+    }
+}

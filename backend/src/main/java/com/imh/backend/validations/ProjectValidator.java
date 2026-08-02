@@ -24,12 +24,15 @@ public class ProjectValidator {
             return;
         }
 
-        boolean isAdmin = organizationMemberRepository
+        boolean canManage = organizationMemberRepository
                 .findByOrganizationIdAndUserId(organization.getId(), currentUserId)
-                .map(member -> member.getRole() == OrganizationMember.OrgRole.ADMIN)
+                .map(member ->
+                        member.getRole() == OrganizationMember.OrgRole.OWNER
+                                || member.getRole() == OrganizationMember.OrgRole.ADMIN
+                )
                 .orElse(false);
 
-        if (!isAdmin) {
+        if (!canManage) {
             throw new BadRequestException("Only the organization owner or an admin can manage projects");
         }
     }

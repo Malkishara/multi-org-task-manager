@@ -1,0 +1,151 @@
+.page {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.topControls {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.orgField {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 260px;
+    flex: 1 1 260px;
+}
+
+.orgLabel {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.orgSelect {
+    padding: 0.8rem 0.95rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--muted);
+    outline: none;
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.searchWrap {
+    min-width: 260px;
+    flex: 1 1 260px;
+}
+
+.newProjectWrap {
+    margin-left: auto;
+}
+
+.errorBanner {
+    background: #FEF2F2;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.errorClose {
+    background: none;
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.nameLink {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--blue);
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: inherit;
+}
+
+.statusBadge {
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+}
+
+.progressCell {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 120px;
+}
+
+.progressTrack {
+    flex: 1;
+    background: #E2E8F0;
+    border-radius: 999px;
+    height: 8px;
+}
+
+.progressFill {
+    background: var(--blue);
+    height: 100%;
+    border-radius: 999px;
+}
+
+.progressLabel {
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+
+.rowActions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+/* Mobile: stack controls full width, keep everything left-aligned */
+@media (max-width: 480px) {
+    .page {
+        padding: 1rem;
+    }
+
+    .topControls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .orgField,
+    .searchWrap,
+    .newProjectWrap {
+        flex: none;
+        min-width: 0;
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .newProjectWrap button {
+        width: 100%;
+    }
+
+    .rowActions {
+        justify-content: flex-start;
+    }
+}
